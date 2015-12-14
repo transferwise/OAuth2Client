@@ -41,13 +41,32 @@
   sendProgressHandler:(NXOAuth2ConnectionSendingProgressHandler)progressHandler
       responseHandler:(NXOAuth2ConnectionResponseHandler)responseHandler;
 {
+    [self performMethod:aMethod
+             onResource:aResource
+        usingParameters:someParameters
+            withAccount:anAccount
+      requestConfigurer:nil
+    sendProgressHandler:progressHandler
+        responseHandler:responseHandler];
+}
+
++ (void)performMethod:(NSString *)aMethod
+           onResource:(NSURL *)aResource
+      usingParameters:(NSDictionary *)someParameters
+          withAccount:(NXOAuth2Account *)anAccount
+    requestConfigurer:(NSMutableURLRequestConfigurer)requestConfigurer
+  sendProgressHandler:(NXOAuth2ConnectionSendingProgressHandler)progressHandler
+      responseHandler:(NXOAuth2ConnectionResponseHandler)responseHandler;
+{
     NXOAuth2Request *request = [[NXOAuth2Request alloc] initWithResource:aResource
                                                                   method:aMethod
                                                               parameters:someParameters];
     request.account = anAccount;
-    [request performRequestWithSendingProgressHandler:progressHandler responseHandler:responseHandler];
-}
+    [request performRequestWithRequestConfigurer:requestConfigurer
+                          sendingProgressHandler:progressHandler
+                                 responseHandler:responseHandler];
 
+}
 
 #pragma mark Lifecycle
 
@@ -101,10 +120,24 @@
 - (void)performRequestWithSendingProgressHandler:(NXOAuth2ConnectionSendingProgressHandler)progressHandler
                                  responseHandler:(NXOAuth2ConnectionResponseHandler)responseHandler;
 {
+    [self performRequestWithRequestConfigurer:nil
+                       sendingProgressHandler:progressHandler
+                              responseHandler:responseHandler];
+}
+
+
+- (void)performRequestWithRequestConfigurer:(NSMutableURLRequestConfigurer)requestConfigurer
+                     sendingProgressHandler:(NXOAuth2ConnectionSendingProgressHandler)progressHandler
+                            responseHandler:(NXOAuth2ConnectionResponseHandler)responseHandler;
+{
     NSAssert(self.me == nil, @"This object an only perform one request at the same time.");
     
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:self.resource];
     [request setHTTPMethod:self.requestMethod];
+    if (requestConfigurer)
+    {
+        requestConfigurer(request);
+    }
     self.connection = [[NXOAuth2Connection alloc] initWithRequest:request
                                                 requestParameters:self.parameters
                                                       oauthClient:self.account.oauthClient

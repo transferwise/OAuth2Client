@@ -17,6 +17,8 @@
 
 @class NXOAuth2Account;
 
+typedef void(^NSMutableURLRequestConfigurer)(NSMutableURLRequest *request);
+
 @interface NXOAuth2Request : NSObject {
 @private
     NSDictionary *parameters;
@@ -36,6 +38,15 @@
           withAccount:(NXOAuth2Account *)account
   sendProgressHandler:(NXOAuth2ConnectionSendingProgressHandler)progressHandler
       responseHandler:(NXOAuth2ConnectionResponseHandler)responseHandler;
+
++ (void)performMethod:(NSString *)method
+           onResource:(NSURL *)resource
+      usingParameters:(NSDictionary *)parameters
+          withAccount:(NXOAuth2Account *)account
+    requestConfigurer:(NSMutableURLRequestConfigurer)requestConfigurer
+  sendProgressHandler:(NXOAuth2ConnectionSendingProgressHandler)progressHandler
+      responseHandler:(NXOAuth2ConnectionResponseHandler)responseHandler;
+
 
 
 #pragma mark Lifecycle
@@ -61,6 +72,10 @@
 
 - (void)performRequestWithSendingProgressHandler:(NXOAuth2ConnectionSendingProgressHandler)progressHandler
                                  responseHandler:(NXOAuth2ConnectionResponseHandler)responseHandler;
+
+- (void)performRequestWithRequestConfigurer:(NSMutableURLRequestConfigurer)requestConfigurer
+                     sendingProgressHandler:(NXOAuth2ConnectionSendingProgressHandler)progressHandler
+                            responseHandler:(NXOAuth2ConnectionResponseHandler)responseHandler;
 
 
 #pragma mark Cancel
