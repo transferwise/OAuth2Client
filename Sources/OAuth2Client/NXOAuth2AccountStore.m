@@ -480,15 +480,13 @@ NSString * const kNXOAuth2AccountStoreAccountType = @"kNXOAuth2AccountStoreAccou
 
 - (void)oauthClientDidGetAccessToken:(NXOAuth2Client *)client;
 {
-    NSString *accountType;
-    @synchronized (self.pendingOAuthClients) {
-        accountType = [self accountTypeOfPendingOAuthClient:client];
-        [self.pendingOAuthClients removeObjectForKey:accountType];
+    NSString *accountType = [self removePendingOAuthClient:client];
+    if (accountType)
+    {
+        NXOAuth2Account *account = [[NXOAuth2Account alloc] initAccountWithOAuthClient:client accountType:accountType];
+        
+        [self addAccount:account];
     }
-
-    NXOAuth2Account *account = [[NXOAuth2Account alloc] initAccountWithOAuthClient:client accountType:accountType];
-
-    [self addAccount:account];
 }
 
 - (void)addAccount:(NXOAuth2Account *)account;
@@ -513,21 +511,15 @@ NSString * const kNXOAuth2AccountStoreAccountType = @"kNXOAuth2AccountStoreAccou
 
     // If there is one case that was overlooked, we will remove the oauth
     // client from the list of pending oauth clients as a precaution.
-    NSString *accountType;
-    @synchronized (self.pendingOAuthClients) {
-        accountType = [self accountTypeOfPendingOAuthClient:client];
-        if (accountType) {
-            [self.pendingOAuthClients removeObjectForKey:accountType];
-        }
-    }
+    [self removePendingOAuthClient:client];
 }
 
 - (void)oauthClient:(NXOAuth2Client *)client didFailToGetAccessTokenWithError:(NSError *)error;
 {
-    NSString *accountType;
-    @synchronized (self.pendingOAuthClients) {
-        accountType = [self accountTypeOfPendingOAuthClient:client];
-        [self.pendingOAuthClients removeObjectForKey:accountType];
+    NSString *accountType = [self removePendingOAuthClient:client];
+    if (!accountType)
+    {
+        accountType = @"Unknown";
     }
 
     NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -537,6 +529,19 @@ NSString * const kNXOAuth2AccountStoreAccountType = @"kNXOAuth2AccountStoreAccou
     [[NSNotificationCenter defaultCenter] postNotificationName:NXOAuth2AccountStoreDidFailToRequestAccessNotification
                                                         object:self
                                                       userInfo:userInfo];
+}
+
+- (NSString*)removePendingOAuthClient:(NXOAuth2Client*)client
+{
+    NSString *accountType;
+    @synchronized (self.pendingOAuthClients) {
+        accountType = [self accountTypeOfPendingOAuthClient:client];
+        if (accountType)
+        {
+            [self.pendingOAuthClients removeObjectForKey:accountType];
+        }
+    }
+    return accountType;
 }
 
 
