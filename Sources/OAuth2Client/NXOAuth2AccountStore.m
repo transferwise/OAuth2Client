@@ -481,9 +481,12 @@ NSString * const kNXOAuth2AccountStoreAccountType = @"kNXOAuth2AccountStoreAccou
 - (void)oauthClientDidGetAccessToken:(NXOAuth2Client *)client;
 {
     NSString *accountType = [self removePendingOAuthClient:client];
-    NXOAuth2Account *account = [[NXOAuth2Account alloc] initAccountWithOAuthClient:client accountType:accountType];
-
-    [self addAccount:account];
+    if (accountType)
+    {
+        NXOAuth2Account *account = [[NXOAuth2Account alloc] initAccountWithOAuthClient:client accountType:accountType];
+        
+        [self addAccount:account];
+    }
 }
 
 - (void)addAccount:(NXOAuth2Account *)account;
