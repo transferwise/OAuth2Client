@@ -214,6 +214,17 @@ NSString * const kNXOAuth2AccountStoreAccountType = @"kNXOAuth2AccountStoreAccou
     [client authenticateWithClientCredentials];
 }
 
+- (void)removePendingOAuthClientForAccountType:(NSString*)accountType
+{
+    if (!accountType)
+    {
+        return;
+    }
+    @synchronized (self.pendingOAuthClients) {
+        [self.pendingOAuthClients removeObjectForKey:accountType];
+    }
+}
+
 - (void)removeAccount:(NXOAuth2Account *)account;
 {
     if (account) {
